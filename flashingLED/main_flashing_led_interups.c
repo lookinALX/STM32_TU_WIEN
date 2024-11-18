@@ -18,7 +18,7 @@ int main(void)
 	// set values for GPIO structure
 	GPIO_Initstructure.Mode = LL_GPIO_MODE_OUTPUT; // set pin as an output
 	GPIO_Initstructure.OutputType = LL_GPIO_OUTPUT_PUSHPULL; // set to push-pull (0-1)
-  GPIO_Initstructure.Pin = LL_GPIO_PIN_5; // set to pin 5, used GPIOA == port A
+  	GPIO_Initstructure.Pin = LL_GPIO_PIN_5; // set to pin 5, used GPIOA == port A
 	GPIO_Initstructure.Pull = LL_GPIO_PULL_NO;
 	GPIO_Initstructure.Speed = LL_GPIO_SPEED_FREQ_HIGH;
 	// send the filled structure to port A
@@ -31,7 +31,7 @@ int main(void)
 	// initialize TIM2 registers with default parameters
 	LL_TIM_StructInit(&TIM_Init_Struct);
 	TIM_Init_Struct.Prescaler = 7999; // bus clock (8 MHz) is divided by the prescaler (register value + 1).
-                                     // divide the clock by 8000 and thus obtain 1kHz “counting frequency”. 
+                                     // divide the clock by 8000 and thus obtain 1kHz ï¿½counting frequencyï¿½. 
 	TIM_Init_Struct.Autoreload = 999;  // timer counts up to the autoreload value and triggers an update interrupt.
 	// send the filled structure to TIM2
 	LL_TIM_Init(TIM2,&TIM_Init_Struct);
