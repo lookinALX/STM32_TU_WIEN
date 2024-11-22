@@ -66,8 +66,8 @@ int main(void)
 	GPIO_InitStructure.Pull = LL_GPIO_PULL_NO;
 	GPIO_InitStructure.Speed = LL_GPIO_SPEED_FREQ_HIGH;
 	LL_GPIO_Init(GPIOA, &GPIO_InitStructure);
-	
-	/* Extern Interupt Button Configuration*/
+	 
+	/* Extern Interupt Button Configuration */
 	
 	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOC);
 	
@@ -81,18 +81,78 @@ int main(void)
 	
 	LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_SYSCFG);
 	LL_SYSCFG_SetEXTISource(LL_SYSCFG_EXTI_PORTC, LL_SYSCFG_EXTI_LINE13);
-	
+
 	EXTI_InitStruct.Line_0_31 = LL_EXTI_LINE_13; // EXTI Line 13
 	EXTI_InitStruct.Mode = LL_EXTI_MODE_IT; // Interrupt
 	EXTI_InitStruct.Trigger = LL_EXTI_TRIGGER_FALLING; // Faling whrn pressed reising when released
 	EXTI_InitStruct.LineCommand = ENABLE;
 	LL_EXTI_Init(&EXTI_InitStruct);
 		
+	uint32_t encoded_prio = NVIC_EncodePriority(priority_grouping,0,0);
+	NVIC_SetPriority(EXTI15_10_IRQn, encoded_prio);
+	NVIC_EnableIRQ(EXTI15_10_IRQn);
+	
+	/* USART Configuration */
+	
+	LL_GPIO_StructInit(&GPIO_InitStructure);
+	GPIO_InitStructure.Mode = LL_GPIO_MODE_ALTERNATE;
+	GPIO_InitStructure.Pin = LL_GPIO_PIN_2 | LL_GPIO_PIN_2;
+	GPIO_InitStructure.Pull = LL_GPIO_PULL_NO;
+	GPIO_InitStructure.Speed = LL_GPIO_SPEED_FREQ_HIGH;
+	GPIO_InitStructure.Alternate = LL_GPIO_AF_7;
+	
+	LL_GPIO_Init(GPIOA, &GPIO_InitStructure);
+	
+	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_USART2);
+	LL_USART_StructInit(&USART_InitStruct);
+	
+	USART_InitStruct.BaudRate = 9600;                                           // Baudrate = 9600
+	USART_InitStruct.DataWidth = LL_USART_DATAWIDTH_8B;                         // 8 bit Daten
+	USART_InitStruct.StopBits = LL_USART_STOPBITS_1;                            // Stopbits = 1
+	USART_InitStruct.Parity = LL_USART_PARITY_NONE;                             // no Paritybit
+	USART_InitStruct.HardwareFlowControl = LL_USART_HWCONTROL_NONE;             // no Hardware Flow Control
+	USART_InitStruct.TransferDirection = LL_USART_DIRECTION_TX_RX;              // RX and TX
+	
+	LL_USART_Init(USART2,&USART_InitStruct);
+	LL_USART_Enable(USART2);
+	
+	LL_USART_EnableIT_RXNE(USART2);
+	
+	encoded_prio = NVIC_EncodePriority(priority_grouping,1,0);
+	NVIC_SetPriority(USART2_IRQn, encoded_prio);
+  NVIC_EnableIRQ(USART2_IRQn);
+	
   /* Infinite loop */
   while (1)
   {
   }
 }
+
+	/* Interrupt Handler */
+	
+void USART2_IRQHandler()
+{
+	int recvd; // for interput USART data word
+	recvd = LL_USART_ReceiveData8(USART2);
+	if ((recvd>='A')&&(recvd<='Z')){
+		while(!LL_USART_IsActiveFlag_TXE(USART2)){};
+		LL_USART_TransmitData8(USART2, recvd+32);
+	}
+	if ((recvd>='a')&&(recvd<='z')){
+         while(!LL_USART_IsActiveFlag_TXE(USART2)){};
+         LL_USART_TransmitData8(USART2, recvd-32);
+    }
+}
+
+void EXTI15_10_IRQHandler()
+{
+	if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_13)){
+		LL_GPIO_TogglePin(GPIOA,LL_GPIO_PIN_5);
+		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_13);
+	}
+}
+
+		
 
 /* ==============   BOARD SPECIFIC CONFIGURATION CODE BEGIN    ============== */
 /**
